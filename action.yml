@@ -1,0 +1,34 @@
+name: 'Debian-Prefix-Check'
+description: 'debian prefix check'
+outputs:
+  isFail:
+    description: "the check is fail or not"
+    value: ${{ steps.check-changed-files.outputs.isFail }}
+  check_num:
+    description: "the check result"
+    value: ${{ steps.check-changed-files.outputs.check_num }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get changed files
+      id: get-changed-files
+      uses: tj-actions/changed-files@v44
+      with:
+        files: 'debian/**'
+        files_ignore: |
+          debian/patches/*
+          debian/manpage.*
+          debian/*.manpages
+          debian/changelog
+          debian/copyright
+          debian/compat
+          debian/source/format
+    - name: Check changed files
+      id: check-changed-files
+      if: steps.get-changed-files.outputs.all_changed_files
+      shell: bash
+      run: |
+        echo "检测到debian目录文件有变更: ${{ steps.get-changed-files.outputs.all_changed_files }}" | tee -a comment.txt
+        echo "isFail=true" >> $GITHUB_OUTPUT
+        echo "check_num=${{ steps.get-changed-files.outputs.all_changed_files_count }}" >> $GITHUB_OUTPUT
