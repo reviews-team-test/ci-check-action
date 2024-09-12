@@ -1,0 +1,30 @@
+name: 'Debian-Keys-Check'
+description: 'debian keys check'
+inputs:
+  repo_name:
+    description: 'repo name'
+    required: false
+    default: ${{github.repository}}
+
+outputs:
+  isFail:
+    description: "the check is fail or not"
+    value: ${{ steps.get-result.outputs.isFail }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: check-keys
+      shell: bash
+      run: |
+        check_result=$(python3 $GITHUB_ACTION_PATH/debian-keys-check.py)
+        echo "check_result=$check_result" >> "$GITHUB_OUTPUT"
+      env:
+        repo_name: ${{ inputs.repo_name }}
+        pull_number: ${{ github.event.pull_request.number }}
+        api_token: ${{ github.token }}
+    - if: steps.check-keys.outputs.check_result == 'False'
+      id: get-result
+      shell: bash
+      run: |
+        echo "isFail=true" >> $GITHUB_OUTPUT

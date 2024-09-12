@@ -1,0 +1,41 @@
+name: 'Debian-Prefix-Check'
+description: 'debian prefix check'
+inputs:
+  repo_name:
+    description: 'repo name'
+    required: false
+    default: ${{github.repository}}
+
+outputs:
+  isFail:
+    description: "the check is fail or not"
+    value: ${{ steps.get-result.outputs.isFail }}
+  check_msg:
+    description: "the check msg"
+    value: ${{ steps.get-result.outputs.check_msg }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: get-changed-files
+      uses: tj-actions/changed-files@v44
+      with:
+        files: 'debian/**'
+        files_ignore: |
+          debian/patches/*
+          debian/manpage.*
+          debian/*.manpages
+          debian/changelog
+          debian/copyright
+          debian/compat
+          debian/source/format
+    - id: get-result
+      if: steps.get-changed-files.outputs.all_changed_files
+      shell: bash
+      run: |
+        fileStrNew=${fileStr// /,}
+        check_msg="检测到debian目录文件有变更: $fileStrNew"
+        echo "isFail=true" >> $GITHUB_OUTPUT
+        echo "check_msg=${check_msg}" >> $GITHUB_OUTPUT
+      env:
+        fileStr: ${{ steps.get-changed-files.outputs.all_changed_files }}

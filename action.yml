@@ -1,0 +1,67 @@
+name: debianCheck
+description: 'debian check'
+inputs:
+  repo_name:
+    description: 'repo name'
+    required: false
+    default: ${{github.repository}}
+outputs:
+  summary-status:
+    description: 'summary status'
+    value: ${{ steps.get-summary-result.outputs.summary-status }}
+  summary-result:
+    description: 'summary result'
+    value: ${{ steps.get-summary-result.outputs.summary-result }}
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.repo_name }}
+        ref: ${{ github.event.pull_request.head.sha }}
+    - id: debian-prefix-check
+      uses: reviews-team-test/ci-check-action/actions/debian-prefix-check@debian-check
+    - id: debian-version-check
+      if: always()
+      uses: reviews-team-test/ci-check-action/actions/debian-version-check@debian-check
+    - id: debian-keys-check
+      if: always()
+      uses: reviews-team-test/ci-check-action/actions/debian-keys-check@debian-check
+    - id: get-summary-result
+      if: always()
+      shell: bash
+      run: |
+        summary_status="是"
+        for status in ${preStatus} ${versionStatus} ${keysStatus};do
+          if [ "$status" == "true" ]; then
+            summary_status="否"
+            break
+          fi
+        done
+        echo "summary-status=$summary_status" >> $GITHUB_OUTPUT
+        echo "summary-result=$preResult|$versionResult|$keysResult" >> $GITHUB_OUTPUT
+
+        if [ "$summary_status" == "否" ]; then
+          detailUrl="https://github.com/reviews-team-test/infra-settings/blob/master/services/prow/config/jobs/images/debian-check/readme.md"
+          echo -e "> [\!WARNING]\n[[Debian检查]](${detailUrl})" | tee summary-comment.txt
+        fi
+        
+        if [ "$preStatus" == "true" ]; then
+          echo "- ${{steps.debian-prefix-check.outputs.check_msg}}" | tee -a summary-comment.txt
+        fi
+
+        if [ "$versionStatus" == "true" ]; then
+          echo "- ${{steps.debian-version-check.outputs.check_msg}}" | tee -a summary-comment.txt
+        fi
+
+        if [ "$keysStatus" == "true" ]; then
+          cat comment.txt | tee -a summary-comment.txt
+        fi
+      env:
+        preStatus: ${{ steps.debian-prefix-check.outputs.isFail }}
+        versionStatus: ${{ steps.debian-version-check.outputs.isFail }}
+        keysStatus: ${{ steps.debian-keys-check.outputs.isFail }}
+        preResult: ${{ steps.debian-prefix-check.outputs.isFail != 'true' && '0' || '1' }}
+        versionResult: ${{ steps.debian-version-check.outputs.isFail != 'true' && '0' || '1' }}
+        keysResult: ${{ steps.debian-keys-check.outputs.isFail != 'true' && '0' || '1' }}
