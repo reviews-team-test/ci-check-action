@@ -1,0 +1,22 @@
+name: 'Send-Data-to-MDY'
+description: 'send check data to mdy'
+inputs:
+  testtype:
+    description: 'test type'
+    required: true
+    default: 'staticCheck'
+  status:
+    description: 'status of check result'
+    required: true
+    default: '是'
+  result:
+    description: 'result'
+    required: true
+    default: '0'
+
+
+runs:
+  using: "composite"
+  steps:
+    - run: echo "use check-tools"
+      shell: bash

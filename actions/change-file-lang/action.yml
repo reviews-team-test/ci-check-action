@@ -1,0 +1,58 @@
+name: 'Get-Change-File-Language'
+description: 'get change file language'
+inputs:
+  repo_name:
+    description: 'repo name'
+    required: true
+    default: ''
+
+outputs:
+  isGo: 
+    description: 'isGo'
+    value: ${{ steps.get-check-flag.outputs.isGo }}
+  isC: 
+    description: 'isC'
+    value: ${{ steps.get-check-flag.outputs.isC }}
+  isSh: 
+    description: 'isSh'
+    value: ${{ steps.get-check-flag.outputs.isSh}}
+
+runs:
+  using: "composite"
+  steps:
+    - id: get-go-files
+      uses: SkyHighGrowth/gha-changed-files@v1.0.1
+      with:
+        files: |
+          **.go
+    - id: get-c-files
+      uses: SkyHighGrowth/gha-changed-files@v1.0.1
+      with:
+        files: |
+          **.cpp
+          **.cxx
+          **.cc
+          **.c++
+          **.c
+          **.ipp
+          **.ixx
+          **.tpp
+          **.txx
+    - id: get-sh-files
+      uses: SkyHighGrowth/gha-changed-files@v1.0.1
+      with:
+        files: |
+          **.sh
+          **.bash
+    - id: get-check-flag
+      shell: bash
+      run: |
+        if [ "${{steps.get-go-files.outputs.all_changed_files}}" ];then
+          echo "isGo=true" >> $GITHUB_OUTPUT
+        fi
+        if [ "${{steps.get-c-files.outputs.all_changed_files}}" ];then
+          echo "isC=true" >> $GITHUB_OUTPUT
+        fi
+        if [ "${{steps.get-sh-files.outputs.all_changed_files}}" ];then
+          echo "isSh=true" >> $GITHUB_OUTPUT
+        fi
