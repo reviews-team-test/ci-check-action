@@ -4,9 +4,9 @@ outputs:
   isFail:
     description: "the check is fail or not"
     value: ${{ steps.check-changed-files.outputs.isFail }}
-  check_num:
+  check_msg:
     description: "the check result"
-    value: ${{ steps.check-changed-files.outputs.check_num }}
+    value: ${{ steps.check-changed-files.outputs.check_msg }}
 
 runs:
   using: "composite"
@@ -29,6 +29,5 @@ runs:
       if: steps.get-changed-files.outputs.all_changed_files
       shell: bash
       run: |
-        echo "检测到debian目录文件有变更: ${{ steps.get-changed-files.outputs.all_changed_files }}" | tee -a comment.txt
         echo "isFail=true" >> $GITHUB_OUTPUT
-        echo "check_num=${{ steps.get-changed-files.outputs.all_changed_files_count }}" >> $GITHUB_OUTPUT
+        echo "check_msg=${{ steps.get-changed-files.outputs.all_changed_files }}" >> $GITHUB_OUTPUT
