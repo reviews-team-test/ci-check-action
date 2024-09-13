@@ -1,37 +1,25 @@
 name: 'Post-Check'
 description: 'Post Step After Check, eg. comment, add reviewers'
 inputs:
-  testtype:
-    description: 'test type'
+  token:
+    description: 'token '
+    required: false
+    default: ${{github.token}}
+  comment-file:
+    description: 'comment file path'
+    required: false
+    default: 'comment.txt'
+  reviewers:
+    description: 'comment file path'
     required: true
-    default: 'staticCheck'
-  status:
-    description: 'status of check result'
-    required: true
-    default: '是'
-  result:
-    description: 'result'
-    required: true
-    default: '0'
-
 
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@v4
+    - uses: thollander/actions-comment-pull-request@v2
       with:
-        repository: kuchune/check-tools
-        sparse-checkout: |
-          common/sendData.py
-        sparse-checkout-cone-mode: false
-    - run: python3 common/sendData.py
-      shell: bash
-      env:
-        PROJECT: "${{github.repository}}"
-        NUMBER: "${{github.event.pull_request.number}}"
-        REVISION: "${{github.event.pull_request.head.sha}}"
-        RUNID: "${{github.run_id}}"
-        JOBSTATUS: "${{job.status}}"
-        TESTTYPE: ${{ inputs.testtype }}
-        STATUS: ${{ inputs.status }}
-        RESULT: ${{ inputs.result }}
+        filePath: ${{inputs.comment-file}}
+    - uses: ryaugusta/pr-add-reviewers-action@v1
+      with:
+        token: ${{ inputs.token }}
+        reviewers: ${{ inputs.reviewers }}
