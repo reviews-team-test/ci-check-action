@@ -9,10 +9,10 @@ inputs:
 outputs:
   isFail:
     description: "the check is fail or not"
-    value: ${{ steps.check-changed-files.outputs.isFail }}
+    value: ${{ steps.get-result.outputs.isFail }}
   check_msg:
     description: "the check msg"
-    value: ${{ steps.check-changed-files.outputs.check_msg }}
+    value: ${{ steps.get-result.outputs.check_msg }}
 
 runs:
   using: "composite"
