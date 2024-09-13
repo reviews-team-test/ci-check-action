@@ -1,33 +1,54 @@
-name: 'Debian-Prefix-Check'
-description: 'debian prefix check'
+name: 'Debian-Version-Check'
+description: 'debian version check'
+inputs:
+  repo_name:
+    description: 'repo name'
+    required: false
+    default: ${{github.repository}}
+
 outputs:
   isFail:
     description: "the check is fail or not"
     value: ${{ steps.check-changed-files.outputs.isFail }}
   check_msg:
-    description: "the check result"
+    description: "the check msg"
     value: ${{ steps.check-changed-files.outputs.check_msg }}
 
 runs:
   using: "composite"
   steps:
     - name: Get changed files
-      id: get-changed-files
+      id: changed-files
       uses: tj-actions/changed-files@v44
       with:
-        files: 'debian/**'
-        files_ignore: |
-          debian/patches/*
-          debian/manpage.*
-          debian/*.manpages
-          debian/changelog
-          debian/copyright
-          debian/compat
-          debian/source/format
-    - name: Check changed files
-      id: check-changed-files
-      if: steps.get-changed-files.outputs.all_changed_files
+        files: 'debian/changelog'
+    - name: Check Version
+      id: check-version
+      if: steps.changed-files.outputs.all_changed_files
+      shell: bash
+      env: 
+        repository: ${{ inputs.repo_name }}
+      run: |
+        result=$(echo ${repository} | grep "/" || true)
+        project_tmp=${repository}
+        if [[ "$result" != "" ]]; then
+            project_tmp=$(echo ${repository} | awk -F'/' '{print $2}' || true)
+        fi
+        version_str=$(dpkg-parsechangelog -l debian/changelog -n 2|grep ${project_tmp}|awk -F'[()]' '{print $2}'|grep -v '^$\|^Task\|^Bug\|^Influence'|tr '\n' ' '|| true)
+        version_num=$(echo $version_str|awk '{print NF}' || true)
+        echo "version_str is ${version_str}"
+        echo "version_num is ${version_num}"
+        if [[ "$version_num" == "2" ]]; then
+            version0=$(echo $version_str|awk '{print $1}' || true)
+            version1=$(echo $version_str|awk '{print $2}' || true)
+            check_result=$(dpkg --compare-versions ${version0} gt ${version1} && echo true || echo false)
+        fi
+        echo "check_result=$check_result" >> "$GITHUB_OUTPUT"
+        echo "version_str=$version_str" >> "$GITHUB_OUTPUT"
+    - if: steps.check-version.outputs.check_result == 'false'
+      id: get-result
       shell: bash
       run: |
+        check_msg="检测到debian目录文件有变更:${{steps.get-changed-files.outputs.all_changed_files}}"
         echo "isFail=true" >> $GITHUB_OUTPUT
-        echo "check_msg=${{ steps.get-changed-files.outputs.all_changed_files }}" >> $GITHUB_OUTPUT
+        echo "check_msg=$check_msg" >> $GITHUB_OUTPUT
