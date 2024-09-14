@@ -49,6 +49,6 @@ runs:
       id: get-result
       shell: bash
       run: |
-        check_msg="检测到debian目录文件有变更:${{steps.get-changed-files.outputs.all_changed_files}}"
+        check_msg="检测到debian目录文件有变更:${{steps.changed-files.outputs.all_changed_files}}"
         echo "isFail=true" >> $GITHUB_OUTPUT
         echo "check_msg=$check_msg" >> $GITHUB_OUTPUT
