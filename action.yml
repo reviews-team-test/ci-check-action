@@ -35,7 +35,6 @@ runs:
         }'
         cp $GITHUB_ACTION_PATH . -r
         python3 dbusapi-check/main.py --source_directory="." --commit_info_str="${commit_info}" || true
-        sed -i 's/passed/unpassed/g' result.json || true
     - name: get specified property result
       id: repository_type
       uses: ActionsTools/read-json-action@main
