@@ -11,7 +11,8 @@ inputs:
     default: 'comment.txt'
   reviewers:
     description: 'comment file path'
-    required: true
+    required: false
+    default: ''
 
 runs:
   using: "composite"
