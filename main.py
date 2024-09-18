@@ -93,7 +93,7 @@ def main():
                 parse_data(data, commit_info)
                 info_log(f"系统调用结果请求完成!")
             else:
-                error_log(f"异常结果，请检查代码！")
+                info_log(f"扫描结果通过, 无需发送系统调用结果请求!")
 
         else:
             info_log(f"{language.capitalize()} D-Bus 检查异常！")
