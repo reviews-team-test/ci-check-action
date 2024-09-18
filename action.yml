@@ -3,8 +3,8 @@ description: 'Dbus Api Security Check'
 inputs:
   reviewers:
     description: 'reviewers'
-    required: true
-    default: ckux
+    required: false
+    default: ''
 
 runs:
   using: "composite"
