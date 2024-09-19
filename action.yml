@@ -1,19 +1,5 @@
-name: 'Send-Data-to-MDY'
-description: 'send check data to mdy'
-inputs:
-  testtype:
-    description: 'test type'
-    required: true
-    default: 'staticCheck'
-  status:
-    description: 'status of check result'
-    required: true
-    default: '是'
-  result:
-    description: 'result'
-    required: true
-    default: '0'
-
+name: 'Check-Tools'
+description: 'check tools'
 
 runs:
   using: "composite"
