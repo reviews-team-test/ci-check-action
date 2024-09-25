@@ -1,10 +1,10 @@
 name: 'Get-Change-File-Language'
 description: 'get change file language'
 inputs:
-  repo_name:
-    description: 'repo name'
-    required: true
-    default: ''
+  scandir:
+    description: 'scan dir'
+    required: false
+    default: '.'
 
 outputs:
   isGo: 
@@ -32,11 +32,13 @@ runs:
     - id: get-go-files
       uses: tj-actions/changed-files@v45
       with:
+        path: ${{ inputs.scandir }}
         files: |
           **.go
     - id: get-c-files
       uses: tj-actions/changed-files@v45
       with:
+        path: ${{ inputs.scandir }}
         files: |
           **.cpp
           **.cxx
@@ -50,6 +52,7 @@ runs:
     - id: get-sh-files
       uses: tj-actions/changed-files@v45
       with:
+        path: ${{ inputs.scandir }}
         files: |
           **.sh
           **.bash
