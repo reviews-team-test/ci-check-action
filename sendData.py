@@ -9,7 +9,7 @@ NUMBER = os.environ.get("NUMBER", "6") #PULL_NUMBER
 CHANGEURL = f"https://github.com/{PROJECT}/pull/{NUMBER}"
 # AUTHOR = os.environ.get("AUTHOR", "kuchune") #github.actor
 REVISION = os.environ.get("REVISION", "c8daa46ae1c65d28bfcea09301cecca3092aa8cd") #github.sha
-RUNID = os.environ.get("RUNID", "10629754757") #github.run_id
+RUNID = os.environ.get("RUNID", "11024999045") #github.run_id
 JOBSTATUS = os.environ.get("JOBSTATUS", "success") #job.status
 TESTTYPE = os.environ.get("TESTTYPE", "staticCheck")
 STATUS = os.environ.get("STATUS", "否")
@@ -48,17 +48,27 @@ def send_webhook_request(push_info):
     except requests.exceptions.RequestException as e:
         print(f"Error sending webhook request: {e}")
         return None
-    
+
 @retry(tries=3, delay=1)
 def get_pr_info():
     url = f"https://api.github.com/repos/{PROJECT}/pulls/{NUMBER}"
-    response = requests.get(url).json()
+    response = requests.get(url)
     global pr_type
     global pr_base_branch
     global commit_author
-    pr_type = response['state'].title()
-    pr_base_branch = response['base']['ref']
-    commit_author = response['user']['login']
+    if response.status_code == 200:
+        pr_type = response.json()['state'].title()
+        pr_base_branch = response.json()['base']['ref']
+        commit_author = response.json()['user']['login']
+
+@retry(tries=3, delay=1)
+def get_run_timeing():
+    url = f"https://api.github.com/repos/{PROJECT}/actions/runs/{RUNID}/timing"
+    response = requests.get(url)
+    secends = 0
+    if response.status_code == 200:
+        secends = int(round(response.json()['run_duration_ms']/1000))
+        return secends
 
 
 get_pr_info()
@@ -77,7 +87,8 @@ testResults = {
     "status": STATUS,
     "result": RESULT,
     # "log": "https://github.com/"+PROJECT+"/actions/runs/"+RUNID+"/artifacts/"+ARCHIVEID"
-    "log": "https://github.com/"+PROJECT+"/actions/runs/"+RUNID
+    "log": "https://github.com/"+PROJECT+"/actions/runs/"+RUNID,
+    "during": get_run_timeing()
 }
 push_info = {
     "commitInfo": json.dumps(commitInfo),
